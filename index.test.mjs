@@ -215,3 +215,29 @@ test('json.stringify - very big object', async () => {
 
   assert.ok(result.length > 1000000);
 });
+
+
+test('jsonReadableStream - with null and undefined', async() => {
+  const object = {
+    name: 'Sebas',
+    age: 30,
+    keyOf: undefined,
+    someThingNull: null,
+    address: {
+      street: 'Rua das Flores',
+      city: 'São Paulo',
+      state: 'SP',
+      zipCode: 123456
+    },
+  }; 
+
+  const stream = jsonReadableStream(object);
+
+  let result = '';
+  for await (const chunk of stream) {
+    result += new TextDecoder().decode(chunk);
+  }
+
+  assert.strictEqual(result, '{"name":"Sebas","age":30,"someThingNull":null,"address":{"street":"Rua das Flores","city":"São Paulo","state":"SP","zipCode":123456}}')
+
+})

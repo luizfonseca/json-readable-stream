@@ -21,14 +21,23 @@ const char = {
 */
 export function jsonReadableStream(inputObject, options = {}) {
   const generatorFn = options.shallow ? generateShallowJSONChunks : generateJSONChunks;
+  const encoder = new TextEncoder();
+
+  /** @type {AsyncGenerator<string, void, unknown>} */
+  let datasource
 
   return new ReadableStream({
-    async start(controller) {
-      for await (const chunk of generatorFn(inputObject)) {
-        controller.enqueue(new TextEncoder().encode(chunk));
-      }
+    async start() {
+      datasource = await generatorFn(inputObject)
+    },
 
-      controller.close();
+    async pull(controller) {
+      const { done, value } = await datasource.next()
+      if (done) {
+        controller.close();
+      } else {
+        controller.enqueue(encoder.encode(value));
+      }
     }
   });
 }
@@ -54,6 +63,9 @@ export async function* generateJSONChunks(value) {
       const entries = Object.entries(value);
       for (let i = 0; i < entries.length; i++) {
         const [key, nestedValue] = entries[i];
+
+        // ignore undefined values, we can't represent them in JSON
+        if (nestedValue === undefined) continue;
         yield `"${key}"${char.COLON}`;
         yield* generateJSONChunks(nestedValue); // Recursive call for nested objects
         if (i < entries.length - 1) yield char.COMMA;
@@ -79,6 +91,10 @@ export async function* generateShallowJSONChunks(obj) {
   const entries = Object.entries(obj);
   for (let i = 0; i < entries.length; i++) {
     const [key, value] = entries[i];
+
+    // ignore undefined values, we can't represent them in JSON
+    if (value === undefined) continue;
+
     yield `"${key}":${JSON.stringify(value)}`;
     if (i < entries.length - 1) yield char.COMMA;
   }
