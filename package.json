@@ -1,11 +1,12 @@
 {
   "name": "@luizfonseca/json-readable-stream",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Utility package to convert any JS object to a JSON ReadableStream Uint8Array",
   "main": "index.mjs",
   "exports": {
     "import": "./index.mjs",
-    "require": "./index.cjs"
+    "require": "./index.cjs",
+    "types": "./index.d.ts"
   },
   "type": "module",
   "scripts": {
